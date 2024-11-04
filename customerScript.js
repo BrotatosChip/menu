@@ -127,3 +127,48 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial display setup
     updateCartDisplay();
 });
+addToCartButtons.forEach(button => {
+    button.addEventListener('click', function () {
+        const food = this.getAttribute('data-food');
+        const price = parseFloat(this.getAttribute('data-price'));
+
+        // Find the food image associated with this button
+        const foodImage = this.closest('.foodItem').querySelector('img');
+        if (foodImage) {
+            // Clone the food image and animate it
+            const flyingImage = foodImage.cloneNode(true);
+            flyingImage.classList.add('flyingImage');
+            document.body.appendChild(flyingImage);
+
+            // Get the starting position of the image and target position of the cart
+            const startPosition = foodImage.getBoundingClientRect();
+            const cartPosition = cartList.getBoundingClientRect();
+
+            // Set initial position of the cloned image
+            flyingImage.style.left = `${startPosition.left}px`;
+            flyingImage.style.top = `${startPosition.top}px`;
+
+            // Trigger the animation by setting the final position
+            requestAnimationFrame(() => {
+                flyingImage.style.left = `${cartPosition.left}px`;
+                flyingImage.style.top = `${cartPosition.top}px`;
+                flyingImage.style.transform = 'scale(0.1)';
+            });
+
+            // Remove the cloned image after the animation
+            flyingImage.addEventListener('transitionend', () => {
+                flyingImage.remove();
+            });
+        }
+
+        // Add item to cart logic
+        const existingItem = cart.find(item => item.food === food);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({ food, price, quantity: 1 });
+        }
+        totalPrice += price;
+        updateCartDisplay();
+    });
+});
