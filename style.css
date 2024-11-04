@@ -203,3 +203,21 @@ ul li:hover {
 ul li span {
     font-weight: bold;
 }
+@keyframes flyToCart {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(0, -500px) scale(0.1);
+    }
+}
+
+.flyingImage {
+    position: absolute;
+    z-index: 1000;
+    width: 100px;
+    transition: all 1s ease-in-out;
+    animation: flyToCart 1s ease-in-out forwards;
+}
