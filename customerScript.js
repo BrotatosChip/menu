@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const cart = [];
     let totalPrice = 0;
-
-    // Conversion rate from USD to KHR
     const conversionRate = 4100;
 
     // Select DOM elements
@@ -15,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const checkoutTotalPrice = document.getElementById('checkoutTotalPrice');
     const confirmCheckout = document.getElementById('confirmCheckout');
     const cancelCheckout = document.getElementById('cancelCheckout');
+    const discountButton = document.getElementById('discountButton');
+
+    let discountApplied = 0; // Track applied discount
 
     // Function to update the cart display
     const updateCartDisplay = () => {
@@ -41,19 +42,33 @@ document.addEventListener('DOMContentLoaded', function () {
             // Check if the item already exists in the cart
             const existingItem = cart.find(item => item.food === food);
             if (existingItem) {
-                // Increase quantity if item already in the cart
                 existingItem.quantity += 1;
             } else {
-                // Add new item to the cart
                 cart.push({ food, price, quantity: 1 });
             }
 
-            // Update the total price
             totalPrice += price;
-
-            // Update the cart display
             updateCartDisplay();
         });
+    });
+
+    // Apply Discount Button functionality
+    discountButton.addEventListener('click', () => {
+        const discountInput = prompt("Enter discount percentage (e.g., 20%):");
+
+        if (discountInput && discountInput.endsWith('%')) {
+            const discountPercent = parseFloat(discountInput);
+            if (!isNaN(discountPercent) && discountPercent > 0 && discountPercent <= 100) {
+                discountApplied = (discountPercent / 100) * totalPrice;
+                totalPrice -= discountApplied;
+                updateCartDisplay();
+                alert(`Discount of ${discountPercent}% applied! New total is $${totalPrice.toFixed(2)}`);
+            } else {
+                alert("Please enter a valid percentage (e.g., 20%).");
+            }
+        } else {
+            alert("Please enter a discount percentage (e.g., 20%).");
+        }
     });
 
     // Show the checkout popup when the checkout button is clicked
@@ -81,15 +96,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Confirm the checkout and save the order to localStorage
     confirmCheckout.addEventListener('click', function () {
-        // Save cart to localStorage
+        // Save cart and discount to localStorage for admin view
         let orders = JSON.parse(localStorage.getItem('foodOrders')) || {};
-        const customerName = prompt("Enter your name:", "Sigma") || "Sigma"; // Get the customer name from input
+        const customerName = prompt("Enter your name:", "Sigma") || "Sigma";
 
         if (!orders[customerName]) {
-            orders[customerName] = []; // Initialize array if it doesn't exist
+            orders[customerName] = [];
         }
 
-        // Store the orders correctly
+        // Store order with discount information
         cart.forEach(item => {
             orders[customerName].push({
                 food: item.food,
@@ -98,12 +113,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        localStorage.setItem('foodOrders', JSON.stringify(orders)); // Update localStorage
-        console.log(cart); // For debugging
+        // Include discount amount in the order for reference
+        orders[customerName].push({
+            discount: discountApplied.toFixed(2),
+            totalPrice: totalPrice.toFixed(2)
+        });
+
+        localStorage.setItem('foodOrders', JSON.stringify(orders));
 
         // Clear cart and hide checkout popup
-        cart.length = 0; // Clear the cart by setting its length to 0
+        cart.length = 0;
         totalPrice = 0;
+        discountApplied = 0;
         updateCartDisplay();
         checkoutPopup.style.display = 'none';
         alert("Order placed successfully!");
@@ -111,64 +132,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Cancel the checkout and hide the checkout popup
     cancelCheckout.addEventListener('click', function () {
-        // Hide the checkout popup
         checkoutPopup.style.display = 'none';
-
-        // Clear the cart, summary, and total price
-        cart.length = 0; // Clear the cart by setting its length to 0
-        totalPrice = 0;  // Reset total price to 0
-        checkoutSummary.innerHTML = ''; // Clear the checkout summary in the popup
-
-        // Update the main cart display and total price
+        cart.length = 0;
+        totalPrice = 0;
+        discountApplied = 0;
+        checkoutSummary.innerHTML = '';
         updateCartDisplay();
         alert("Order canceled and cart cleared.");
     });
 
     // Initial display setup
     updateCartDisplay();
-});
-addToCartButtons.forEach(button => {
-    button.addEventListener('click', function () {
-        const food = this.getAttribute('data-food');
-        const price = parseFloat(this.getAttribute('data-price'));
-
-        // Find the food image associated with this button
-        const foodImage = this.closest('.foodItem').querySelector('img');
-        if (foodImage) {
-            // Clone the food image and animate it
-            const flyingImage = foodImage.cloneNode(true);
-            flyingImage.classList.add('flyingImage');
-            document.body.appendChild(flyingImage);
-
-            // Get the starting position of the image and target position of the cart
-            const startPosition = foodImage.getBoundingClientRect();
-            const cartPosition = cartList.getBoundingClientRect();
-
-            // Set initial position of the cloned image
-            flyingImage.style.left = `${startPosition.left}px`;
-            flyingImage.style.top = `${startPosition.top}px`;
-
-            // Trigger the animation by setting the final position
-            requestAnimationFrame(() => {
-                flyingImage.style.left = `${cartPosition.left}px`;
-                flyingImage.style.top = `${cartPosition.top}px`;
-                flyingImage.style.transform = 'scale(0.1)';
-            });
-
-            // Remove the cloned image after the animation
-            flyingImage.addEventListener('transitionend', () => {
-                flyingImage.remove();
-            });
-        }
-
-        // Add item to cart logic
-        const existingItem = cart.find(item => item.food === food);
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart.push({ food, price, quantity: 1 });
-        }
-        totalPrice += price;
-        updateCartDisplay();
-    });
 });
