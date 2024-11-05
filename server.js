@@ -1,26 +1,23 @@
 const express = require('express');
-const fs = require('fs');
+const bodyParser = require('body-parser');
 const app = express();
-const PORT = 3000;
+const port = 3000;
 
-app.use(express.json());
+// Middleware to parse JSON request bodies
+app.use(bodyParser.json());
 
-// Endpoint to log completed order to orders.log
+// Endpoint to log completed orders
 app.post('/logOrder', (req, res) => {
-    const { customer, items, totalPrice } = req.body;
-    const orderData = `Customer: ${customer}\nItems: ${JSON.stringify(items)}\nTotal Price: $${totalPrice.toFixed(2)}\n\n`;
+    const completedOrder = req.body;
 
-    fs.appendFile('orders.log', orderData, (err) => {
-        if (err) {
-            console.error('Failed to log order:', err);
-            res.status(500).send('Error logging order');
-        } else {
-            console.log('Order logged successfully');
-            res.send('Order logged successfully');
-        }
-    });
+    // Simulate saving the order to a database or logging it
+    console.log('Order received:', completedOrder);
+
+    // Send a response back to confirm receipt
+    res.send('Order logged successfully.');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
 });
